@@ -1,4 +1,4 @@
-/** 💡 CSP & Worker 重定向补丁 **/
+/** 💡 核心补丁：Worker 重定向 **/
 const _createObjectURL = URL.createObjectURL
 URL.createObjectURL = function (obj) {
   if (obj instanceof Blob && (obj.type.includes('javascript') || obj.type === '')) {
@@ -7,10 +7,27 @@ URL.createObjectURL = function (obj) {
   return _createObjectURL.call(URL, obj)
 }
 
-let activeControllers = {}
+// 状态管理
+let activeCount = 0
+let taskQueue = []
 let taskChunks = {}
 
-// 1. 状态维护函数
+// 1. 自动调度器
+async function scheduleNext () {
+  const settings = await chrome.storage.local.get({ concurrency: 2 })
+  const limit = parseInt(settings.concurrency)
+
+  if (activeCount < limit && taskQueue.length > 0) {
+    const taskId = taskQueue.shift()
+    activeCount++
+    executeTask(taskId).finally(() => {
+      activeCount--
+      scheduleNext()
+    })
+  }
+}
+
+// 2. 状态更新与 UI 渲染
 async function updateTask (id, obj) {
   const { downloadQueue = [] } = await chrome.storage.local.get('downloadQueue')
   const idx = downloadQueue.findIndex(t => t.id == id)
@@ -21,42 +38,41 @@ async function updateTask (id, obj) {
   }
 }
 
-// 2. UI 渲染渲染
 function render () {
   chrome.storage.local.get('downloadQueue', ({ downloadQueue = [] }) => {
     const list = document.getElementById('tasks-list')
     if (!list) return
     list.innerHTML = downloadQueue.map(t => `
             <div class="task-card">
-                <div class="task-info">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; color:#444;">
                     <span>${t.title}</span>
                     <span>${t.progress}%</span>
                 </div>
                 <div class="progress-container">
                     <div class="progress-bar" style="width: ${t.progress}%"></div>
                 </div>
-                <div class="task-meta">
+                <div style="display:flex; gap:20px; font-size:13px; color:#666;">
                     <span class="status-tag">${t.status}</span>
-                    <span>📦 ${t.size || 0} MB</span>
-                    <span>⚙️ ${t.mode === 'pro' ? 'MP4 高级封装' : 'TS 极速导出'}</span>
+                    <span>📦 ${t.size || '0.00'} MB</span>
+                    <span>${t.mode === 'pro' ? '🎥 MP4' : '📄 TS'}</span>
                 </div>
             </div>
         `).reverse().join('')
   })
 }
 
-// 3. 下载流程
-async function runDownload (task) {
-  if (activeControllers[task.id]) return
-  const controller = new AbortController()
-  activeControllers[task.id] = controller
+// 3. 任务执行核心
+async function executeTask (id) {
+  const { downloadQueue = [] } = await chrome.storage.local.get('downloadQueue')
+  const task = downloadQueue.find(t => t.id == id)
+  if (!task) return
 
   try {
-    await updateTask(task.id, { status: '解析资源中...' })
+    await updateTask(task.id, { status: '解析资源...' })
     let res = await fetch(task.url)
     let text = await res.text()
 
-    // 识别嵌套流
+    // 嵌套流解析
     if (text.includes("#EXT-X-STREAM-INF")) {
       const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#'))
       const subUrl = lines[lines.length - 1]
@@ -69,44 +85,36 @@ async function runDownload (task) {
     const tsUrls = text.split('\n').filter(l => l.trim() && !l.startsWith('#'))
       .map(l => l.startsWith('http') ? l : baseUrl + l)
 
-    // 💡 广告过滤逻辑：识别并移除短小的广告切片
-    const filteredUrls = tsUrls.filter(u => !/adslot|advert|doubleclick|m3u8_ad/i.test(u))
-    if (filteredUrls.length < 5) {
-      await updateTask(task.id, { status: '忽略无效广告流', progress: 0 })
-      return
-    }
+    // 广告过滤
+    const finalUrls = tsUrls.filter(u => !/adslot|advert|doubleclick/i.test(u))
 
     taskChunks[task.id] = []
-    for (let i = 0; i < filteredUrls.length; i++) {
-      const tsRes = await fetch(filteredUrls[i], { signal: controller.signal })
-      const buf = await tsRes.arrayBuffer()
-      taskChunks[task.id].push(buf)
+    for (let i = 0; i < finalUrls.length; i++) {
+      const tsRes = await fetch(finalUrls[i])
+      taskChunks[task.id].push(await tsRes.arrayBuffer())
 
-      if (i % 15 === 0 || i === filteredUrls.length - 1) {
-        const p = Math.floor(((i + 1) / filteredUrls.length) * 100)
-        const currentBytes = taskChunks[task.id].reduce((s, b) => s + b.byteLength, 0)
+      if (i % 20 === 0 || i === finalUrls.length - 1) {
+        const p = Math.floor(((i + 1) / finalUrls.length) * 100)
+        const bytes = taskChunks[task.id].reduce((s, b) => s + b.byteLength, 0)
         await updateTask(task.id, {
           progress: p,
-          size: (currentBytes / 1024 / 1024).toFixed(2),
-          status: '正在下载正片...'
+          size: (bytes / 1024 / 1024).toFixed(2),
+          status: '正在下载...'
         })
       }
     }
 
-    await updateTask(task.id, { status: '视频合成封装中...' })
+    await updateTask(task.id, { status: '封装转码中...' })
     await finalize(task)
 
   } catch (e) {
-    console.error("下载中断:", e)
-    await updateTask(task.id, { status: '已停止' })
-  } finally {
-    delete activeControllers[task.id]
+    await updateTask(task.id, { status: '下载失败' })
   }
 }
 
 async function finalize (task) {
   const chunks = taskChunks[task.id]
-  if (!chunks || chunks.length === 0) return
+  if (!chunks) return
 
   let blob, ext
   if (task.mode === 'pro') {
@@ -118,22 +126,16 @@ async function finalize (task) {
 
     try {
       await ffmpeg.load()
-      // 合并分片
       const totalSize = chunks.reduce((acc, curr) => acc + curr.byteLength, 0)
-      const combinedData = new Uint8Array(totalSize)
+      const combined = new Uint8Array(totalSize)
       let offset = 0
-      for (const chunk of chunks) {
-        combinedData.set(new Uint8Array(chunk), offset)
-        offset += chunk.byteLength
-      }
-      ffmpeg.FS('writeFile', 'temp.ts', combinedData)
-      // 封装为 MP4
-      await ffmpeg.run('-i', 'temp.ts', '-c', 'copy', 'output.mp4')
-      const data = ffmpeg.FS('readFile', 'output.mp4')
-      blob = new Blob([data.buffer], { type: 'video/mp4' })
+      for (const c of chunks) { combined.set(new Uint8Array(c), offset); offset += c.byteLength }
+
+      ffmpeg.FS('writeFile', 'in.ts', combined)
+      await ffmpeg.run('-i', 'in.ts', '-c', 'copy', 'out.mp4')
+      blob = new Blob([ffmpeg.FS('readFile', 'out.mp4').buffer], { type: 'video/mp4' })
       ext = 'mp4'
     } catch (err) {
-      console.error("FFmpeg 转码失败，改为合并下载:", err)
       blob = new Blob(chunks, { type: 'video/mp2t' })
       ext = 'ts'
     }
@@ -144,25 +146,38 @@ async function finalize (task) {
 
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `${task.title.replace(/[^\w\u4e00-\u9fa5]/g, '_')}_${Date.now()}.${ext}`
+  a.download = `${task.title.replace(/[^\w]/g, '_')}.${ext}`
   a.click()
-  await updateTask(task.id, { status: '已完成并保存', progress: 100 })
+  await updateTask(task.id, { status: '完成', progress: 100 })
+  delete taskChunks[task.id]
 }
 
-async function runDownloadById (id) {
-  const { downloadQueue = [] } = await chrome.storage.local.get('downloadQueue')
-  const task = downloadQueue.find(t => t.id == id)
-  if (task) runDownload(task)
-}
-
-// 初始化
+// 4. 初始化与监听
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'NEW_TASK') runDownloadById(msg.id)
+  if (msg.type === 'NEW_TASK') {
+    taskQueue.push(msg.id)
+    updateTask(msg.id, { status: '排队中...' })
+    scheduleNext()
+  }
 })
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // 加载并发设置
+  const { concurrency = 2 } = await chrome.storage.local.get('concurrency')
+  const input = document.getElementById('concurrency-limit')
+  input.value = concurrency
+  input.onchange = (e) => {
+    chrome.storage.local.set({ concurrency: e.target.value })
+    scheduleNext()
+  }
+
+  // 检查自动开始
   const autoId = new URLSearchParams(window.location.search).get('autoId')
-  if (autoId) runDownloadById(autoId)
+  if (autoId) {
+    taskQueue.push(autoId)
+    scheduleNext()
+  }
+
   render()
   document.getElementById('clear-all').onclick = () => {
     chrome.storage.local.set({ downloadQueue: [] }, render)
