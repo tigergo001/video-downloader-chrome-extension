@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>高级下载中心</title>
+  <style>
+    body {
+      background: #e0e5ec;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 40px;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #e0e5ec;
+      padding: 40px;
+      border-radius: 40px;
+      box-shadow: 20px 20px 60px #bec3c9, -20px -20px 60px #ffffff;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      color: #444;
+      font-size: 28px;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    .btn-clear {
+      background: #e0e5ec;
+      color: #ff3b30;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 6px 6px 12px #bec3c9, -6px -6px 12px #ffffff;
+      transition: all 0.2s;
+    }
+
+    .btn-clear:active {
+      box-shadow: inset 4px 4px 8px #bec3c9, inset -4px -4px 8px #ffffff;
+    }
+
+    .task-card {
+      background: #e0e5ec;
+      padding: 25px;
+      border-radius: 25px;
+      margin-bottom: 30px;
+      box-shadow: 12px 12px 24px #bec3c9, -12px -12px 24px #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .task-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .progress-container {
+      height: 18px;
+      background: #e0e5ec;
+      border-radius: 12px;
+      box-shadow: inset 8px 8px 16px #bec3c9, inset -8px -8px 16px #ffffff;
+      margin: 20px 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(145deg, #007aff, #0062cc);
+      border-radius: 12px;
+      transition: width 0.4s ease-out;
+      box-shadow: 2px 0 8px rgba(0, 122, 255, 0.4);
+    }
+
+    .task-meta {
+      font-size: 14px;
+      color: #777;
+      display: flex;
+      gap: 25px;
+      align-items: center;
+    }
+
+    .status-tag {
+      padding: 4px 12px;
+      background: #e0e5ec;
+      border-radius: 8px;
+      box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
+      color: #007aff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💎 视频专家下载中心</h1>
+      <button id="clear-all" class="btn-clear">清空列表</button>
+    </div>
+    <div id="tasks-list"></div>
+  </div>
+  <script src="lib/ffmpeg.min.js"></script>
+  <script src="lib/ffmpeg-core.js"></script>
+  <script src="download.js"></script>
+</body>
+
+</html>

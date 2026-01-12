@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 320px;
+      font-family: -apple-system, sans-serif;
+      margin: 0;
+      background: #fff;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+
+    .header span {
+      font-weight: 600;
+      color: #007aff;
+    }
+
+    #open-manager {
+      border: none;
+      background: none;
+      color: #007aff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .card {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-fast {
+      background: #007aff;
+    }
+
+    .btn-pro {
+      background: #5856d6;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+    }
+
+    .empty {
+      padding: 30px;
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <span>邻里嗅探</span>
+    <button id="open-manager">📂 下载中心</button>
+  </div>
+  <div id="list" class="list"></div>
+  <script src="popup.js"></script>
+</body>
+
+</html>
