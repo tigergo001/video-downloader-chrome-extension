@@ -1,12 +1,54 @@
+// {
+//   "manifest_version": 3,
+//   "name": "邻里-视频专家 Pro",
+//   "version": "3.8",
+//   "permissions": [
+//     "webRequest",
+//     "storage",
+//     "downloads",
+//     "tabs"
+//   ],
+//   "host_permissions": [
+//     "<all_urls>"
+//   ],
+//   "background": {
+//     "service_worker": "background.js"
+//   },
+//   "action": {
+//     "default_popup": "popup.html"
+//   },
+//   "cross_origin_embedder_policy": {
+//     "value": "require-corp"
+//   },
+//   "cross_origin_opener_policy": {
+//     "value": "same-origin"
+//   },
+//   "content_security_policy": {
+//     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+//   },
+//   "web_accessible_resources": [
+//     {
+//       "resources": [
+//         "lib/*",
+//         "download.html"
+//       ],
+//       "matches": [
+//         "<all_urls>"
+//       ]
+//     }
+//   ]
+// }
+// --- new ----
 {
   "manifest_version": 3,
   "name": "邻里-视频专家 Pro",
-  "version": "3.8",
+  "version": "4.0",
   "permissions": [
     "webRequest",
     "storage",
     "downloads",
-    "tabs"
+    "tabs",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
