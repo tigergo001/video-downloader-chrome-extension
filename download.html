@@ -3,11 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Video下载管理专家</title>
+  <title>Video下载管理专家 v3.9.1</title>
   <style>
     body {
       background: #e0e5ec;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       padding: 30px;
       margin: 0;
     }
@@ -28,34 +28,18 @@
       margin-bottom: 25px;
     }
 
-    /* 设置面板样式 */
+    h1 {
+      color: #444;
+      margin: 0;
+      font-size: 24px;
+    }
+
     .settings-panel {
       background: #e0e5ec;
-      padding: 20px;
+      padding: 15px 20px;
       border-radius: 20px;
       margin-bottom: 30px;
       box-shadow: inset 6px 6px 12px #bec3c9, inset -6px -6px 12px #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .setting-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      color: #444;
-    }
-
-    input[type="number"] {
-      border: none;
-      background: #e0e5ec;
-      padding: 8px;
-      border-radius: 8px;
-      width: 50px;
-      box-shadow: 3px 3px 6px #bec3c9, -3px -3px 6px #ffffff;
-      text-align: center;
     }
 
     .task-card {
@@ -63,25 +47,7 @@
       padding: 20px;
       border-radius: 25px;
       margin-bottom: 25px;
-      box-shadow: 12px 12px 24px #bec3c9, -12px -12px 24px #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .progress-container {
-      height: 14px;
-      background: #e0e5ec;
-      border-radius: 10px;
-      box-shadow: inset 6px 6px 12px #bec3c9, inset -6px -6px 12px #ffffff;
-      margin: 15px 0;
-      overflow: hidden;
-    }
-
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(145deg, #007aff, #005bbd);
-      border-radius: 10px;
-      transition: width 0.3s ease;
+      box-shadow: 9px 9px 16px #bec3c9, -9px -9px 16px #ffffff;
     }
 
     .btn {
@@ -101,12 +67,6 @@
     .btn-red {
       color: #ff3b30;
     }
-
-    .status-tag {
-      color: #007aff;
-      font-weight: bold;
-      font-size: 13px;
-    }
   </style>
 </head>
 
@@ -114,17 +74,12 @@
   <div class="container">
     <div class="header">
       <h1>💎 下载管理中心</h1>
-      <button id="clear-all" class="btn btn-red">清空已完成</button>
+      <button class="btn btn-red" id="clear-all">清空完成</button>
     </div>
-
     <div class="settings-panel">
-      <div class="setting-item">
-        <span>⚡ 同时下载任务数:</span>
-        <input type="number" id="concurrency-limit" min="1" max="5" value="2">
-      </div>
-      <div style="font-size: 12px; color: #777;">(建议设置 2-3，防止转码时占用内存过高)</div>
+      <span style="font-size:14px; color:#666;">任务并发数设置为 2 以防内存溢出</span>
+      <input type="hidden" id="concurrency-limit" value="2">
     </div>
-
     <div id="tasks-list"></div>
   </div>
   <script src="lib/ffmpeg.min.js"></script>

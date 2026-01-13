@@ -66,36 +66,25 @@
       color: white;
       cursor: pointer;
       font-size: 12px;
-      transition: opacity 0.2s;
-    }
-
-    .btn-fast {
-      background: #007aff;
     }
 
     .btn-pro {
       background: #5856d6;
     }
 
-    .btn:hover {
-      opacity: 0.8;
-    }
-
-    .empty {
-      padding: 30px;
-      text-align: center;
-      color: #999;
-      font-size: 13px;
+    .btn-del {
+      background: #ff3b30;
+      flex: 0.3;
     }
   </style>
 </head>
 
 <body>
   <div class="header">
-    <span>邻里嗅探</span>
-    <button id="open-manager">📂 下载中心</button>
+    <span>💎 视频资源嗅探</span>
+    <button id="open-manager">下载管理</button>
   </div>
-  <div id="list" class="list"></div>
+  <div class="list" id="list"></div>
   <script src="popup.js"></script>
 </body>
 
